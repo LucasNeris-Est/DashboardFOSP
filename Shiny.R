@@ -13,6 +13,16 @@ library(survival)
 
 rm(list=ls())
 setwd("input")
+#dados = read.dbf("pacigeral_mod.dbf")
+
+anos = c("2000","2001","2002","2003","2004","2005","2006",
+         "2007","2008","2009","2010","2011","2012","2013",
+         "2014","2015","2016","2017","2018","2019","2020",
+         "2021","2022")
+variaveis = c("Sexo","Faixa Etária","Cirurgia", "Radioterapia", "Quimioterapia", "Hormonioterapia"
+              ,"Imunoterapia","Categoria de Atendimento", "Transplante de Medula Óssea")
+faixa_etaria = c("00-09", "10-19", "20-29", "30-39", 
+                 "40-49", "50-59", "60-69", "70+")
 
 Header = dashboardHeader(
   title = "Análise de Sobrevivêcia com dados da FOSP",
@@ -49,7 +59,7 @@ Sidebar = dashboardSidebar(
 Body    = dashboardBody(
   
   tabItems(
-    #Pagina de configura??es
+    #Pagina de configurações
     tabItem(tabName = "config",
             fluidPage(
       box(title = 'Configurações desejadas para construção do dashboard',
@@ -81,16 +91,13 @@ Body    = dashboardBody(
                   column(4, checkboxGroupInput(
                     inputId = "lucas02",
                     label = "Variáveis", 
-                    choices = c("Sexo", "Idade","Cirurgia", "Radio", "Quimio", "Hormonio"),
+                    choices = variaveis,
                     selected = "Sexo"
                   )),
                   column(5,sliderTextInput(
                     inputId = "lucas03",
                     label = "Anos de diagnostico", 
-                    choices = c("2000","2001","2002","2003","2004","2005","2006",
-                                "2007","2008","2009","2010","2011","2012","2013",
-                                "2014","2015","2016","2017","2018","2019","2020",
-                                "2021","2022"),
+                    choices = anos,
                     selected = c("2009", "2013"),
                     from_min = "2000", 
                     from_max = "2021",
@@ -100,23 +107,43 @@ Body    = dashboardBody(
                   pickerInput(
                     inputId = "lucas04",
                     label = "Ano máximo de acompanhamento", 
-                    choices = c("2000","2001","2002","2003","2004","2005","2006",
-                                "2007","2008","2009","2010","2011","2012","2013",
-                                "2014","2015","2016","2017","2018","2019","2020",
-                                "2021","2022"),
+                    choices = anos,
                     selected = c("2018")
-                  ))
+                  ),
+                  conditionalPanel(
+                  condition = "input.lucas02.includes('Faixa Etária')",
+                  checkboxGroupInput(
+                    inputId = "lucas05",
+                    label = "Faixa Etária (Caso marcado)", 
+                    choices = faixa_etaria)
+                                   ))
+                  
+                         )
+                
+                       ),
+                     )
+
                 )
-     )
-   ))
+   
+   
   )
  )
 
 UI = dashboardPage(skin = "blue-light",header = Header, sidebar = Sidebar, body = Body)
 
-Server = function(input, output) {
+Server = function(input, output, session) {
   
-    
+  observeEvent(
+      input$lucas03,{
+      input$lucas04
+      aux = as.numeric(anos) 
+      aux = aux[aux>=as.numeric(input$lucas03[2])]
+      aux = as.character(aux)
+      updatePickerInput(session,"lucas04",choices = aux)
     }
+  )
+
+  
+}
 
 shinyApp(UI, Server)
